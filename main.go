@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -78,8 +79,9 @@ func initData() {
 		// Insert dummy worker data
 		for i := 1; i <= 3; i++ {
 			worker := Worker{ID: i, Name: fmt.Sprintf("Worker %d", i), Type: fmt.Sprintf("Type %c", 'A'+i-1)}
-			data := fmt.Sprintf("%d,%s,%s", worker.ID, worker.Name, worker.Type)
-			if err := workersBucket.Put([]byte(fmt.Sprintf("w%d", i)), []byte(data)); err != nil {
+			b, _ := json.Marshal(worker)
+			// data := fmt.Sprintf("%d,%s,%v", worker.ID, worker.Name, worker.Type)
+			if err := workersBucket.Put([]byte(fmt.Sprintf("w%d", i)), []byte(string(b))); err != nil {
 				return err
 			}
 		}
@@ -93,8 +95,9 @@ func initData() {
 		// Insert dummy device data
 		for i := 1; i <= 3; i++ {
 			device := Device{ID: i, Host: fmt.Sprintf("Host %d", i), Name: fmt.Sprintf("Device %d", i)}
-			data := fmt.Sprintf("%d,%s,%s", device.ID, device.Host, device.Name)
-			if err := devicesBucket.Put([]byte(fmt.Sprintf("d%d", i)), []byte(data)); err != nil {
+			b, _ := json.Marshal(device)
+			// data := fmt.Sprintf("%d,%s,%v", device.ID, device.Host, device.Name)
+			if err := devicesBucket.Put([]byte(fmt.Sprintf("d%d", i)), []byte(string(b))); err != nil {
 				return err
 			}
 		}
@@ -127,7 +130,8 @@ func fetchWorkers() []Worker {
 		}
 		return bucket.ForEach(func(k, v []byte) error {
 			var worker Worker
-			fmt.Sscanf(string(v), "%d,%s,%s", &worker.ID, &worker.Name, &worker.Type)
+			json.Unmarshal(v, &worker)
+			// fmt.Sscanf(string(v), "%d,%s,%s", &worker.ID, &worker.Name, &worker.Type)
 			workersData = append(workersData, worker)
 			return nil
 		})
@@ -147,7 +151,8 @@ func fetchDevices() []Device {
 		}
 		return bucket.ForEach(func(k, v []byte) error {
 			var device Device
-			fmt.Sscanf(string(v), "%d,%s,%s", &device.ID, &device.Host, &device.Name)
+			json.Unmarshal(v, &device)
+			// fmt.Sscanf(string(v), "%d,%s,%s", &device.ID, &device.Host, &device.Name)
 			devicesData = append(devicesData, device)
 			return nil
 		})
